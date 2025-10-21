@@ -27,7 +27,9 @@ export default function Home() {
         
         {/* Floating decorative elements */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse-slow" style={{
+        animationDelay: '2s'
+      }}></div>
         
         <div className="container mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8 animate-in fade-in slide-in-from-bottom duration-700">
@@ -187,7 +189,7 @@ export default function Home() {
             <div className="absolute inset-0 educational-gradient opacity-5"></div>
             <div className="relative z-10">
               <h3 className="text-3xl font-display font-bold mb-4">Ready to Share Your Knowledge?</h3>
-              <p className="text-muted-foreground mb-8 max-w-2xl mx-auto text-lg">Note: You cannot directly become an instructor. You should login as a student and register to become an instructor.</p>
+              <p className="text-muted-foreground mb-8 max-w-2xl mx-auto text-lg">Note: You cannot directly become an instructor. You should apply to become an instructor at signup as isntructor.</p>
               <Button size="lg" variant="glow" onClick={() => navigate('/signup')}>
                 Apply to Become a Student
                 <Rocket className="ml-2 h-5 w-5" />
@@ -287,21 +289,11 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 stagger-fade-in">
             {featuredCourses.map((course, index) => {
-              const instructor = mockUsers.find(u => u.id === course.instructorId);
-              const avatarColor = instructor ? getAvatarColor(instructor.name) : '';
-              
-              return (
-                <Card 
-                  key={course.id} 
-                  className="group cursor-pointer border-0 card-glass hover-lift overflow-hidden"
-                  onClick={() => navigate(`/course/${course.id}`)}
-                >
+            const instructor = mockUsers.find(u => u.id === course.instructorId);
+            const avatarColor = instructor ? getAvatarColor(instructor.name) : '';
+            return <Card key={course.id} className="group cursor-pointer border-0 card-glass hover-lift overflow-hidden" onClick={() => navigate(`/course/${course.id}`)}>
                   <div className="relative overflow-hidden">
-                    <img 
-                      src={course.thumbnail} 
-                      alt={course.title} 
-                      className="w-full h-52 object-cover smooth-transition group-hover:scale-110" 
-                    />
+                    <img src={course.thumbnail} alt={course.title} className="w-full h-52 object-cover smooth-transition group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <div className="absolute top-4 right-4">
                       <Badge variant="secondary" className="bg-background/95 backdrop-blur-md shadow-lg border-0">
@@ -313,7 +305,9 @@ export default function Home() {
                   
                   <CardHeader className="space-y-4 pb-4">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border-2 border-background shadow-md" style={{ backgroundColor: avatarColor }}>
+                      <Avatar className="h-10 w-10 border-2 border-background shadow-md" style={{
+                    backgroundColor: avatarColor
+                  }}>
                         <AvatarFallback className="text-white font-semibold">
                           {instructor?.name[0].toUpperCase()}
                         </AvatarFallback>
@@ -332,21 +326,13 @@ export default function Home() {
                       <Badge variant="outline" className="text-xs font-medium border-primary/30">
                         {course.category}
                       </Badge>
-                      <Badge 
-                        variant="secondary" 
-                        className={`text-xs capitalize font-medium ${
-                          course.difficulty === 'beginner' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' :
-                          course.difficulty === 'intermediate' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' :
-                          'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
-                        } border`}
-                      >
+                      <Badge variant="secondary" className={`text-xs capitalize font-medium ${course.difficulty === 'beginner' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : course.difficulty === 'intermediate' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'} border`}>
                         {course.difficulty}
                       </Badge>
                     </div>
                   </CardContent>
-                </Card>
-              );
-            })}
+                </Card>;
+          })}
           </div>
           <div className="text-center mt-12">
             <Button size="lg" variant="secondary" onClick={() => navigate('/courses')} className="group">
