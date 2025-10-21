@@ -189,7 +189,7 @@ export default function Home() {
             <div className="absolute inset-0 educational-gradient opacity-5"></div>
             <div className="relative z-10">
               <h3 className="text-3xl font-display font-bold mb-4">Ready to Share Your Knowledge?</h3>
-              <p className="text-muted-foreground mb-8 max-w-2xl mx-auto text-lg">Note: You cannot directly become an instructor. You should apply to become an instructor at signup as isntructor.</p>
+              <p className="text-muted-foreground mb-8 max-w-2xl mx-auto text-lg">Note: You cannot directly become an instructor. You should apply to become an instructor at signup as instructor.</p>
               <Button size="lg" variant="glow" onClick={() => navigate('/signup')}>
                 Apply to Become a Student
                 <Rocket className="ml-2 h-5 w-5" />
