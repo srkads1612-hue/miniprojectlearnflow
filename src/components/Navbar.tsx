@@ -69,7 +69,7 @@ export function Navbar() {
                   : 'text-foreground hover:text-primary'
               }`}
             >
-              Home
+              {user.role === 'student' ? 'My Learning' : 'Home'}
               {isActive(getHomeRoute()) && (
                 <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
               )}
@@ -184,7 +184,7 @@ export function Navbar() {
               }`}
               onClick={() => setMobileMenuOpen(false)}
             >
-              Home
+              {user.role === 'student' ? 'My Learning' : 'Home'}
             </Link>
             <Link 
               to="/courses" 

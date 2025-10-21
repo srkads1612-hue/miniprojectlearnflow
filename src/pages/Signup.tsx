@@ -22,7 +22,7 @@ export default function Signup() {
     
     if (success) {
       toast({ title: 'Account created successfully!' });
-      navigate('/');
+      navigate('/student/dashboard');
     } else {
       toast({ 
         title: 'Signup failed', 

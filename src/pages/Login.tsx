@@ -31,6 +31,8 @@ export default function Login() {
           navigate('/admin');
         } else if (loggedInUser?.role === 'instructor') {
           navigate('/instructor/home');
+        } else if (loggedInUser?.role === 'student') {
+          navigate('/student/dashboard');
         } else {
           navigate('/');
         }
