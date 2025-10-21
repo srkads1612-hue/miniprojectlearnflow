@@ -1,0 +1,243 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { mockCourses, mockUsers, Course, Comment } from '@/lib/mockData';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { BookOpen, Clock, User as UserIcon } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getAvatarColor } from '@/lib/avatarColors';
+
+export default function CourseDetail() {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [course, setCourse] = useState<Course | null>(null);
+  const [currentLesson, setCurrentLesson] = useState(0);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [comment, setComment] = useState('');
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [showNewLessonBanner, setShowNewLessonBanner] = useState(false);
+
+  useEffect(() => {
+    const courses = JSON.parse(localStorage.getItem('courses') || JSON.stringify(mockCourses));
+    const foundCourse = courses.find((c: Course) => c.id === id);
+    if (foundCourse) {
+      setCourse(foundCourse);
+      setIsEnrolled(user ? foundCourse.enrolledStudents.includes(user.id) : false);
+    }
+
+    const savedComments = localStorage.getItem(`comments-${id}`);
+    if (savedComments) {
+      setComments(JSON.parse(savedComments));
+    }
+  }, [id, user]);
+
+  const handleEnroll = () => {
+    if (!user) {
+      toast({ title: 'Please login to enroll', variant: 'destructive' });
+      navigate('/login');
+      return;
+    }
+
+    if (course) {
+      const courses = JSON.parse(localStorage.getItem('courses') || '[]');
+      const updatedCourses = courses.map((c: Course) =>
+        c.id === course.id
+          ? { ...c, enrolledStudents: [...c.enrolledStudents, user.id] }
+          : c
+      );
+      localStorage.setItem('courses', JSON.stringify(updatedCourses));
+      setIsEnrolled(true);
+      toast({ title: 'Successfully enrolled!' });
+    }
+  };
+
+  const handleComment = () => {
+    if (!user) {
+      toast({ title: 'Please login to comment', variant: 'destructive' });
+      return;
+    }
+
+    if (comment.trim() && course) {
+      const newComment: Comment = {
+        id: Date.now().toString(),
+        courseId: course.id,
+        lessonId: course.lessons[currentLesson].id,
+        userId: user.id,
+        content: comment,
+        createdAt: new Date().toISOString(),
+      };
+
+      const updatedComments = [...comments, newComment];
+      setComments(updatedComments);
+      localStorage.setItem(`comments-${id}`, JSON.stringify(updatedComments));
+      setComment('');
+      toast({ title: 'Comment added!' });
+    }
+  };
+
+  if (!course) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <p>Course not found</p>
+      </div>
+    );
+  }
+
+  const instructor = mockUsers.find(u => u.id === course.instructorId);
+  const lessonComments = comments.filter(c => c.lessonId === course.lessons[currentLesson]?.id);
+  const instructorColor = instructor ? getAvatarColor(instructor.name) : '';
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {showNewLessonBanner && (
+        <Alert className="mb-6 bg-primary/10 border-primary">
+          <AlertDescription className="text-primary font-medium">
+            🎉 New Lesson Added!
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Video Player */}
+          <div className="aspect-video bg-black rounded-lg overflow-hidden">
+            <iframe
+              src={`${course.lessons[currentLesson]?.vimeoUrl.replace('vimeo.com/', 'player.vimeo.com/video/')}`}
+              className="w-full h-full"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+
+          {/* Course Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-3xl">{course.title}</CardTitle>
+              <CardDescription className="text-base">{course.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <BookOpen className="h-4 w-4" />
+                  {course.lessons.length} Lessons
+                </span>
+                <span className="flex items-center gap-1">
+                  <UserIcon className="h-4 w-4" />
+                  {course.enrolledStudents.length} Students
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Comments Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Discussion</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Share your thoughts..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+                <Button onClick={handleComment}>Post Comment</Button>
+              </div>
+
+              <div className="space-y-4 mt-6">
+                {lessonComments.map(c => {
+                  const commentUser = mockUsers.find(u => u.id === c.userId);
+                  const commentUserColor = commentUser ? getAvatarColor(commentUser.name) : '';
+                  return (
+                    <div key={c.id} className="flex gap-3">
+                      <Avatar style={{ backgroundColor: commentUserColor }}>
+                        <AvatarFallback className="text-white font-semibold">
+                          {commentUser?.name[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-sm">{commentUser?.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(c.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-sm">{c.content}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          {/* Enroll Button */}
+          {!isEnrolled && (
+            <Button className="w-full" size="lg" onClick={handleEnroll}>
+              Enroll Now
+            </Button>
+          )}
+
+          {/* Lesson List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Lessons</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {course.lessons.map((lesson, index) => (
+                <div
+                  key={lesson.id}
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    currentLesson === index
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-accent'
+                  }`}
+                  onClick={() => setCurrentLesson(index)}
+                >
+                  <div className="font-medium">{lesson.title}</div>
+                  <div className="text-sm opacity-80 flex items-center gap-1 mt-1">
+                    <Clock className="h-3 w-3" />
+                    {lesson.duration}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Instructor Info */}
+          {instructor && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Instructor</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar className="h-12 w-12" style={{ backgroundColor: instructorColor }}>
+                    <AvatarFallback className="text-white font-semibold">
+                      {instructor.name[0].toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-semibold">{instructor.name}</div>
+                    <div className="text-sm text-muted-foreground">{instructor.bio}</div>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full" onClick={() => navigate('/profile')}>
+                  View Profile
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
