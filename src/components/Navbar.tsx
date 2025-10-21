@@ -102,21 +102,6 @@ export function Navbar() {
                 )}
               </Link>
             )}
-            {user.role === 'student' && (
-              <Link 
-                to="/student/dashboard" 
-                className={`font-medium smooth-transition relative ${
-                  isActive('/student/dashboard') 
-                    ? 'text-primary' 
-                    : 'text-foreground hover:text-primary'
-                }`}
-              >
-                Dashboard
-                {isActive('/student/dashboard') && (
-                  <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
-                )}
-              </Link>
-            )}
           </nav>
         )}
         
@@ -202,19 +187,6 @@ export function Navbar() {
                 to="/instructor" 
                 className={`px-4 py-2 rounded-md smooth-transition ${
                   isActive('/instructor') 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-accent'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-            )}
-            {user.role === 'student' && (
-              <Link 
-                to="/student/dashboard" 
-                className={`px-4 py-2 rounded-md smooth-transition ${
-                  isActive('/student/dashboard') 
                     ? 'bg-primary text-primary-foreground' 
                     : 'hover:bg-accent'
                 }`}
