@@ -156,30 +156,37 @@ export default function Signup() {
               <Label className="text-sm font-medium">I want to join as:</Label>
               <RadioGroup value={accountType} onValueChange={(value) => setAccountType(value as 'student' | 'instructor')}>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className={`relative border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                    accountType === 'student' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
-                  }`} onClick={() => setAccountType('student')}>
+                  <Label 
+                    htmlFor="student"
+                    className={`relative border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                      accountType === 'student' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
                     <RadioGroupItem value="student" id="student" className="sr-only" />
-                    <Label htmlFor="student" className="cursor-pointer flex flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-2">
                       <UserCircle className="h-8 w-8" />
                       <span className="font-semibold">Student</span>
                       <span className="text-xs text-muted-foreground text-center">Learn from courses</span>
-                    </Label>
-                  </div>
-                  <div className={`relative border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                    accountType === 'instructor' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
-                  }`} onClick={() => setAccountType('instructor')}>
+                    </div>
+                  </Label>
+                  
+                  <Label 
+                    htmlFor="instructor"
+                    className={`relative border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                      accountType === 'instructor' 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
                     <RadioGroupItem value="instructor" id="instructor" className="sr-only" />
-                    <Label htmlFor="instructor" className="cursor-pointer flex flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-2">
                       <Briefcase className="h-8 w-8" />
                       <span className="font-semibold">Instructor</span>
                       <span className="text-xs text-muted-foreground text-center">Teach courses</span>
-                    </Label>
-                  </div>
+                    </div>
+                  </Label>
                 </div>
               </RadioGroup>
             </div>
