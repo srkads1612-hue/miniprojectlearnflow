@@ -28,7 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     const users = JSON.parse(localStorage.getItem('users') || JSON.stringify(mockUsers));
-    const foundUser = users.find((u: User) => u.email === email);
+    const normalizedEmail = email.toLowerCase().trim();
+    const foundUser = users.find((u: User) => u.email.toLowerCase() === normalizedEmail);
     
     if (foundUser) {
       setUser(foundUser);
@@ -40,17 +41,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = async (email: string, password: string, name: string): Promise<boolean> => {
     const users = JSON.parse(localStorage.getItem('users') || JSON.stringify(mockUsers));
+    const normalizedEmail = email.toLowerCase().trim();
     
-    if (users.find((u: User) => u.email === email)) {
+    if (users.find((u: User) => u.email.toLowerCase() === normalizedEmail)) {
       return false;
     }
 
     const newUser: User = {
       id: Date.now().toString(),
-      email,
+      email: normalizedEmail,
       name,
       role: 'student',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${normalizedEmail}`,
     };
 
     users.push(newUser);
