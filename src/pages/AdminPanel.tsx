@@ -23,7 +23,7 @@ export default function AdminPanel() {
       return;
     }
 
-    const savedApplications = JSON.parse(localStorage.getItem('applications') || '[]');
+    const savedApplications = JSON.parse(localStorage.getItem('instructorApplications') || '[]');
     setApplications(savedApplications);
 
     const savedCourses = JSON.parse(localStorage.getItem('courses') || '[]');
@@ -42,7 +42,7 @@ export default function AdminPanel() {
       a.id === appId ? { ...a, status: 'approved' as const } : a
     );
     setApplications(updatedApps);
-    localStorage.setItem('applications', JSON.stringify(updatedApps));
+    localStorage.setItem('instructorApplications', JSON.stringify(updatedApps));
 
     // Update user role
     const updatedUsers = users.map(u =>
@@ -61,7 +61,7 @@ export default function AdminPanel() {
       a.id === appId ? { ...a, status: 'rejected' as const } : a
     );
     setApplications(updatedApps);
-    localStorage.setItem('applications', JSON.stringify(updatedApps));
+    localStorage.setItem('instructorApplications', JSON.stringify(updatedApps));
     toast({ title: 'Application rejected' });
   };
 
