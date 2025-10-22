@@ -124,7 +124,7 @@ export function Navbar() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:ring-2 hover:ring-primary/20 transition-all">
                     <Avatar className="h-10 w-10 border-2 border-primary/20" style={{ backgroundColor: avatarColor }}>
-                      <AvatarFallback className="text-white font-semibold">
+                      <AvatarFallback className="text-black dark:text-white font-semibold">
                         {user.name[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
