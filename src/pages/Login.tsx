@@ -23,7 +23,8 @@ export default function Login() {
       // Wait briefly for user state to update, then redirect based on role
       setTimeout(() => {
         const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const loggedInUser = users.find((u: any) => u.email === email);
+        const normalizedEmail = email.toLowerCase().trim();
+        const loggedInUser = users.find((u: any) => u.email.toLowerCase() === normalizedEmail);
         
         toast({ title: 'Welcome back!' });
         
