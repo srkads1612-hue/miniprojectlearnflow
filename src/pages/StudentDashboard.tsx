@@ -7,6 +7,7 @@ import { mockCourses, mockUsers, Course } from '@/lib/mockData';
 import { Users as UsersIcon, Clock, BookOpen } from 'lucide-react';
 import { getAvatarColor } from '@/lib/avatarColors';
 import { Badge } from '@/components/ui/badge';
+import { initializeCourseProgress, getCourseProgress } from '@/lib/progressManager';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -30,6 +31,15 @@ export default function StudentDashboard() {
         course.enrolledStudents.includes(user.id)
       );
       setEnrolledCourses(enrolled);
+      
+      // Initialize progress tracking for enrolled courses
+      enrolled.forEach(course => {
+        const existingProgress = getCourseProgress(user.id, course.id);
+        if (!existingProgress) {
+          const lessonIds = course.lessons.map(l => l.id);
+          initializeCourseProgress(user.id, course.id, lessonIds);
+        }
+      });
     }
   }, [user, courses]);
 

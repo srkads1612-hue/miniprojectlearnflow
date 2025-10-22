@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { mockCourses, Course, InstructorApplication } from '@/lib/mockData';
 import { Plus, Edit, Trash2, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { notifyEnrolledStudents } from '@/lib/notificationManager';
 
 export default function InstructorDashboard() {
   const { user, updateUser } = useAuth();
@@ -212,6 +213,13 @@ export default function InstructorDashboard() {
     );
     localStorage.setItem('courses', JSON.stringify(updated));
     setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c));
+    
+    // Notify enrolled students about the update
+    notifyEnrolledStudents(
+      updatedCourse.id,
+      updatedCourse.title,
+      `${updatedCourse.title} has been updated with new content!`
+    );
     
     setShowEditDialog(false);
     setEditingCourse(null);

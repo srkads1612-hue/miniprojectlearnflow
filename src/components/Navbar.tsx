@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useState, useEffect } from 'react';
 import { getAvatarColor } from '@/lib/avatarColors';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,6 +88,21 @@ export function Navbar() {
                 <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
               )}
             </Link>
+            {user.role === 'student' && (
+              <Link 
+                to="/student/progress" 
+                className={`font-medium smooth-transition relative ${
+                  isActive('/student/progress') 
+                    ? 'text-primary' 
+                    : 'text-foreground hover:text-primary'
+                }`}
+              >
+                Progress
+                {isActive('/student/progress') && (
+                  <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
+                )}
+              </Link>
+            )}
             {user.role === 'instructor' && (
               <Link 
                 to="/instructor" 
@@ -107,6 +123,7 @@ export function Navbar() {
         
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <NotificationCenter />
           
           {user ? (
             <>
@@ -182,6 +199,19 @@ export function Navbar() {
             >
               Courses
             </Link>
+            {user.role === 'student' && (
+              <Link 
+                to="/student/progress" 
+                className={`px-4 py-2 rounded-md smooth-transition ${
+                  isActive('/student/progress') 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'hover:bg-accent'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Progress
+              </Link>
+            )}
             {user.role === 'instructor' && (
               <Link 
                 to="/instructor" 

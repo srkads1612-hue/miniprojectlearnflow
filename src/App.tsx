@@ -17,6 +17,7 @@ import InstructorHome from "./pages/InstructorHome";
 import AdminPanel from "./pages/AdminPanel";
 import Profile from "./pages/Profile";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentProgress from "./pages/StudentProgress";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,14 @@ const App = () => (
                   element={
                     <ProtectedRoute allowedRoles={['student']}>
                       <StudentDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/student/progress" 
+                  element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <StudentProgress />
                     </ProtectedRoute>
                   } 
                 />

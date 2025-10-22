@@ -7,9 +7,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { mockCourses, mockUsers, Course, Comment } from '@/lib/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Clock, User as UserIcon } from 'lucide-react';
+import { BookOpen, Clock, User as UserIcon, CheckCircle2, Circle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getAvatarColor } from '@/lib/avatarColors';
+import { initializeCourseProgress, getCourseProgress, updateLessonProgress } from '@/lib/progressManager';
+import { createNotification } from '@/lib/notificationManager';
 
 export default function CourseDetail() {
   const { id } = useParams();
@@ -22,6 +24,7 @@ export default function CourseDetail() {
   const [comment, setComment] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
   const [showNewLessonBanner, setShowNewLessonBanner] = useState(false);
+  const [lessonProgress, setLessonProgress] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     const courses = JSON.parse(localStorage.getItem('courses') || JSON.stringify(mockCourses));
@@ -29,6 +32,18 @@ export default function CourseDetail() {
     if (foundCourse) {
       setCourse(foundCourse);
       setIsEnrolled(user ? foundCourse.enrolledStudents.includes(user.id) : false);
+      
+      // Load progress for enrolled students
+      if (user && foundCourse.enrolledStudents.includes(user.id)) {
+        const progress = getCourseProgress(user.id, foundCourse.id);
+        if (progress) {
+          const progressMap: { [key: string]: boolean } = {};
+          progress.lessons.forEach(l => {
+            progressMap[l.lessonId] = l.completed;
+          });
+          setLessonProgress(progressMap);
+        }
+      }
     }
 
     const savedComments = localStorage.getItem(`comments-${id}`);
@@ -52,9 +67,37 @@ export default function CourseDetail() {
           : c
       );
       localStorage.setItem('courses', JSON.stringify(updatedCourses));
+      
+      // Initialize progress tracking
+      const lessonIds = course.lessons.map(l => l.id);
+      initializeCourseProgress(user.id, course.id, lessonIds);
+      
+      // Create enrollment notification
+      createNotification(
+        user.id,
+        course.id,
+        course.title,
+        'enrollment',
+        `You've successfully enrolled in ${course.title}!`
+      );
+      
       setIsEnrolled(true);
       toast({ title: 'Successfully enrolled!' });
     }
+  };
+
+  const toggleLessonComplete = (lessonId: string) => {
+    if (!user || !course || !isEnrolled) return;
+    
+    const newStatus = !lessonProgress[lessonId];
+    updateLessonProgress(user.id, course.id, lessonId, newStatus, 0);
+    
+    setLessonProgress(prev => ({ ...prev, [lessonId]: newStatus }));
+    
+    toast({ 
+      title: newStatus ? 'Lesson completed!' : 'Lesson marked incomplete',
+      description: newStatus ? 'Keep up the great work!' : undefined
+    });
   };
 
   const handleComment = () => {
@@ -195,18 +238,42 @@ export default function CourseDetail() {
               {course.lessons.map((lesson, index) => (
                 <div
                   key={lesson.id}
-                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`p-3 rounded-lg transition-colors ${
                     currentLesson === index
                       ? 'bg-primary text-primary-foreground'
                       : 'hover:bg-accent'
                   }`}
-                  onClick={() => setCurrentLesson(index)}
                 >
-                  <div className="font-medium">{lesson.title}</div>
-                  <div className="text-sm opacity-80 flex items-center gap-1 mt-1">
-                    <Clock className="h-3 w-3" />
-                    {lesson.duration}
+                  <div 
+                    className="cursor-pointer"
+                    onClick={() => setCurrentLesson(index)}
+                  >
+                    <div className="font-medium flex items-center gap-2">
+                      {lessonProgress[lesson.id] ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Circle className="h-4 w-4" />
+                      )}
+                      {lesson.title}
+                    </div>
+                    <div className="text-sm opacity-80 flex items-center gap-1 mt-1 ml-6">
+                      <Clock className="h-3 w-3" />
+                      {lesson.duration}
+                    </div>
                   </div>
+                  {isEnrolled && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleLessonComplete(lesson.id);
+                      }}
+                    >
+                      {lessonProgress[lesson.id] ? 'Mark Incomplete' : 'Mark Complete'}
+                    </Button>
+                  )}
                 </div>
               ))}
             </CardContent>
