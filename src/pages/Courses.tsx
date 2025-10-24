@@ -89,7 +89,7 @@ export default function Courses() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <div className="absolute top-4 right-4">
-                    <Badge variant="secondary" className="bg-background/95 backdrop-blur-md shadow-lg border-0">
+                    <Badge className="bg-primary text-primary-foreground shadow-lg border-0 hover:bg-primary">
                       <Clock className="h-3 w-3 mr-1" />
                       {course.lessons.length} lessons
                     </Badge>
