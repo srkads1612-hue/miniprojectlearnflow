@@ -51,11 +51,11 @@ export default function Profile() {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20" style={{ backgroundColor: avatarColor }}>
-                  <AvatarFallback className="text-2xl text-white font-bold">
-                    {user.name[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+              <Avatar className="h-20 w-20" style={{ backgroundColor: avatarColor }}>
+                <AvatarFallback className="text-2xl text-black dark:text-white font-bold">
+                  {user.name[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
                 <div>
                   <CardTitle className="text-2xl">{user.name}</CardTitle>
                   <CardDescription>{user.email}</CardDescription>

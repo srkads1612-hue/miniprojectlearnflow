@@ -199,11 +199,11 @@ export default function CourseDetail() {
                   const commentUserColor = commentUser ? getAvatarColor(commentUser.name) : '';
                   return (
                     <div key={c.id} className="flex gap-3">
-                      <Avatar style={{ backgroundColor: commentUserColor }}>
-                        <AvatarFallback className="text-white font-semibold">
-                          {commentUser?.name[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                    <Avatar style={{ backgroundColor: commentUserColor }}>
+                      <AvatarFallback className="text-black dark:text-white font-semibold">
+                        {commentUser?.name[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium text-sm">{commentUser?.name}</span>
@@ -288,7 +288,7 @@ export default function CourseDetail() {
               <CardContent>
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="h-12 w-12" style={{ backgroundColor: instructorColor }}>
-                    <AvatarFallback className="text-white font-semibold">
+                    <AvatarFallback className="text-black dark:text-white font-semibold">
                       {instructor.name[0].toUpperCase()}
                     </AvatarFallback>
                   </Avatar>

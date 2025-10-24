@@ -93,11 +93,11 @@ export default function StudentDashboard() {
                     
                     <CardHeader className="space-y-4 pb-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border-2 border-background shadow-md" style={{ backgroundColor: avatarColor }}>
-                          <AvatarFallback className="text-white font-semibold">
-                            {instructor?.name[0].toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                      <Avatar className="h-10 w-10 border-2 border-background shadow-md" style={{ backgroundColor: avatarColor }}>
+                        <AvatarFallback className="text-black dark:text-white font-semibold">
+                          {instructor?.name[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                         <div className="flex-1 min-w-0">
                           <CardDescription className="text-sm font-medium truncate">{instructor?.name}</CardDescription>
                         </div>
@@ -213,7 +213,7 @@ export default function StudentDashboard() {
                   <CardHeader className="space-y-4 pb-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 border-2 border-background shadow-md" style={{ backgroundColor: avatarColor }}>
-                        <AvatarFallback className="text-white font-semibold">
+                        <AvatarFallback className="text-black dark:text-white font-semibold">
                           {instructor?.name[0].toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
