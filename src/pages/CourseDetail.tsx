@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BookOpen, Clock, User as UserIcon, CheckCircle2, Circle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getAvatarColor } from '@/lib/avatarColors';
-import { initializeCourseProgress, getCourseProgress, updateLessonProgress } from '@/lib/progressManager';
+import { initializeCourseProgress, getCourseProgress, updateLessonProgress, updateVideoProgress } from '@/lib/progressManager';
 import { createNotification } from '@/lib/notificationManager';
 
 export default function CourseDetail() {
@@ -25,6 +25,48 @@ export default function CourseDetail() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [showNewLessonBanner, setShowNewLessonBanner] = useState(false);
   const [lessonProgress, setLessonProgress] = useState<{ [key: string]: boolean }>({});
+  const sessionStartRef = useRef<number>(Date.now());
+  const lastLessonRef = useRef<number>(currentLesson);
+
+  // Track session time for accurate progress
+  useEffect(() => {
+    if (!user || !course || !isEnrolled) return;
+
+    const startTime = Date.now();
+    sessionStartRef.current = startTime;
+
+    // Update time spent every 30 seconds
+    const interval = setInterval(() => {
+      const timeSpent = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+      if (timeSpent >= 30) {
+        const currentLessonId = course.lessons[currentLesson]?.id;
+        if (currentLessonId) {
+          updateVideoProgress(user.id, course.id, currentLessonId, timeSpent, 0);
+          sessionStartRef.current = Date.now();
+        }
+      }
+    }, 30000);
+
+    return () => {
+      clearInterval(interval);
+      // Save any remaining time when component unmounts
+      const finalTime = Math.floor((Date.now() - sessionStartRef.current) / 1000);
+      if (finalTime > 0 && course) {
+        const currentLessonId = course.lessons[currentLesson]?.id;
+        if (currentLessonId) {
+          updateVideoProgress(user.id, course.id, currentLessonId, finalTime, 0);
+        }
+      }
+    };
+  }, [user, course, isEnrolled, currentLesson]);
+
+  // Reset session timer when switching lessons
+  useEffect(() => {
+    if (lastLessonRef.current !== currentLesson) {
+      sessionStartRef.current = Date.now();
+      lastLessonRef.current = currentLesson;
+    }
+  }, [currentLesson]);
 
   useEffect(() => {
     const courses = JSON.parse(localStorage.getItem('courses') || JSON.stringify(mockCourses));
@@ -149,13 +191,27 @@ export default function CourseDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Video Player */}
-          <div className="aspect-video bg-black rounded-lg overflow-hidden">
+          <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
             <iframe
               src={`${course.lessons[currentLesson]?.vimeoUrl.replace('vimeo.com/', 'player.vimeo.com/video/')}`}
               className="w-full h-full"
               allow="autoplay; fullscreen; picture-in-picture"
               allowFullScreen
             />
+            {/* 
+              For custom video players with native time tracking:
+              Use the useVideoTracking hook from src/hooks/use-video-tracking.ts
+              
+              Example:
+              const { totalWatchedTime } = useVideoTracking({
+                userId: user.id,
+                courseId: course.id,
+                lessonId: course.lessons[currentLesson].id,
+                isPlaying: videoIsPlaying,
+                currentTime: videoCurrentTime,
+                enabled: isEnrolled
+              });
+            */}
           </div>
 
           {/* Course Info */}
