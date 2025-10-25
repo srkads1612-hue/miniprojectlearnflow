@@ -56,20 +56,7 @@ export default function Home() {
           </div>
           
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mt-16 animate-in fade-in slide-in-from-bottom duration-700 delay-500">
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-1">{courses.length}+</div>
-              <div className="text-sm text-muted-foreground">Courses</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-1">{mockUsers.filter(u => u.role === 'instructor').length}+</div>
-              <div className="text-sm text-muted-foreground">Instructors</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-1">{mockUsers.filter(u => u.role === 'student').length}K+</div>
-              <div className="text-sm text-muted-foreground">Students</div>
-            </div>
-          </div>
+          
         </div>
       </section>
 
