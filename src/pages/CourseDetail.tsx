@@ -119,6 +119,7 @@ export default function CourseDetail() {
         user.id,
         course.id,
         course.title,
+        'course',
         'enrollment',
         `You've successfully enrolled in ${course.title}!`
       );

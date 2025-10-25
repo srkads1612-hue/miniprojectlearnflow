@@ -1,9 +1,10 @@
 export interface Notification {
   id: string;
   userId: string;
-  courseId: string;
-  courseTitle: string;
-  type: 'course_update' | 'course_created' | 'enrollment';
+  itemId: string; // courseId or workshopId
+  itemTitle: string; // course or workshop title
+  itemType: 'course' | 'workshop';
+  type: 'course_update' | 'course_created' | 'enrollment' | 'workshop_live' | 'workshop_update' | 'certificate_issued';
   message: string;
   createdAt: string;
   read: boolean;
@@ -11,16 +12,18 @@ export interface Notification {
 
 export const createNotification = (
   userId: string,
-  courseId: string,
-  courseTitle: string,
+  itemId: string,
+  itemTitle: string,
+  itemType: 'course' | 'workshop',
   type: Notification['type'],
   message: string
 ) => {
   const notification: Notification = {
     id: `notif-${Date.now()}-${Math.random()}`,
     userId,
-    courseId,
-    courseTitle,
+    itemId,
+    itemTitle,
+    itemType,
     type,
     message,
     createdAt: new Date().toISOString(),
@@ -70,7 +73,18 @@ export const notifyEnrolledStudents = (courseId: string, courseTitle: string, me
   
   if (course && course.enrolledStudents) {
     course.enrolledStudents.forEach((studentId: string) => {
-      createNotification(studentId, courseId, courseTitle, 'course_update', message);
+      createNotification(studentId, courseId, courseTitle, 'course', 'course_update', message);
+    });
+  }
+};
+
+export const notifyEnrolledWorkshopStudents = (workshopId: string, workshopTitle: string, type: Notification['type'], message: string) => {
+  const workshops = JSON.parse(localStorage.getItem('workshops') || '[]');
+  const workshop = workshops.find((w: any) => w.id === workshopId);
+  
+  if (workshop && workshop.enrolledStudents) {
+    workshop.enrolledStudents.forEach((studentId: string) => {
+      createNotification(studentId, workshopId, workshopTitle, 'workshop', type, message);
     });
   }
 };

@@ -10,16 +10,19 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
-import { Plus, Calendar as CalendarIcon, Clock, Users, Video, Trash2, Edit } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, Users, Video, Trash2, Edit, Award } from 'lucide-react';
 import { format } from 'date-fns';
-import { createWorkshop, getInstructorWorkshops, deleteWorkshop, updateSessionLiveStatus, Workshop, WorkshopSession } from '@/lib/workshopManager';
-import { notifyEnrolledStudents } from '@/lib/notificationManager';
+import { createWorkshop, getInstructorWorkshops, deleteWorkshop, updateSessionLiveStatus, updateWorkshop, Workshop, WorkshopSession } from '@/lib/workshopManager';
+import { notifyEnrolledWorkshopStudents } from '@/lib/notificationManager';
+import { issueCertificates } from '@/lib/certificateManager';
 import { cn } from '@/lib/utils';
 
 export default function InstructorWorkshops() {
   const { user } = useAuth();
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingWorkshop, setEditingWorkshop] = useState<Workshop | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -116,9 +119,10 @@ export default function InstructorWorkshops() {
     const vimeoUrl = prompt('Enter Vimeo Live Stream URL:');
     if (vimeoUrl) {
       updateSessionLiveStatus(workshop.id, session.id, true, vimeoUrl);
-      notifyEnrolledStudents(
+      notifyEnrolledWorkshopStudents(
         workshop.id,
         workshop.title,
+        'workshop_live',
         `Workshop session is now LIVE! Join now: ${workshop.title} - ${format(new Date(session.date), 'MMM dd')} at ${session.startTime}`
       );
       loadWorkshops();
@@ -130,6 +134,90 @@ export default function InstructorWorkshops() {
     updateSessionLiveStatus(workshop.id, session.id, false);
     loadWorkshops();
     toast.success('Session ended');
+  };
+
+  const handleEdit = (workshop: Workshop) => {
+    setEditingWorkshop(workshop);
+    setFormData({
+      title: workshop.title,
+      description: workshop.description,
+      category: workshop.category,
+      thumbnail: workshop.thumbnail,
+      maxStudents: workshop.maxStudents,
+    });
+    setSessions(workshop.sessions.map(s => ({
+      date: new Date(s.date),
+      startTime: s.startTime,
+      endTime: s.endTime,
+    })));
+    setIsEditOpen(true);
+  };
+
+  const handleUpdateWorkshop = () => {
+    if (!user || !editingWorkshop || !formData.title || !formData.description) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    const validSessions = sessions.filter(s => s.date && s.startTime && s.endTime);
+    if (validSessions.length === 0) {
+      toast.error('Please add at least one session with date and time');
+      return;
+    }
+
+    const workshopSessions: WorkshopSession[] = validSessions.map(s => ({
+      id: `session-${Date.now()}-${Math.random()}`,
+      date: format(s.date!, 'yyyy-MM-dd'),
+      startTime: s.startTime,
+      endTime: s.endTime,
+      isLive: false,
+    }));
+
+    updateWorkshop(editingWorkshop.id, {
+      ...formData,
+      sessions: workshopSessions,
+    });
+
+    notifyEnrolledWorkshopStudents(
+      editingWorkshop.id,
+      formData.title,
+      'workshop_update',
+      `Workshop "${formData.title}" has been updated with new schedule`
+    );
+
+    loadWorkshops();
+    setIsEditOpen(false);
+    setEditingWorkshop(null);
+    resetForm();
+    toast.success('Workshop updated successfully!');
+  };
+
+  const handleIssueCertificates = (workshop: Workshop) => {
+    if (!user) return;
+    if (workshop.enrolledStudents.length === 0) {
+      toast.error('No students enrolled in this workshop');
+      return;
+    }
+
+    const issued = issueCertificates(
+      workshop.id,
+      workshop.title,
+      user.id,
+      user.name,
+      workshop.enrolledStudents
+    );
+
+    if (issued.length > 0) {
+      notifyEnrolledWorkshopStudents(
+        workshop.id,
+        workshop.title,
+        'certificate_issued',
+        `Congratulations! Your certificate for "${workshop.title}" has been issued!`
+      );
+      toast.success(`Issued ${issued.length} certificate(s)!`);
+    } else {
+      toast.info('All students already have certificates');
+    }
   };
 
   return (
@@ -263,6 +351,122 @@ export default function InstructorWorkshops() {
               </Button>
             </DialogContent>
           </Dialog>
+          
+          {/* Edit Workshop Dialog */}
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Workshop</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="edit-title">Workshop Title</Label>
+                  <Input
+                    id="edit-title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Input
+                    id="edit-category"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-maxStudents">Max Students</Label>
+                  <Input
+                    id="edit-maxStudents"
+                    type="number"
+                    value={formData.maxStudents}
+                    onChange={(e) => setFormData({ ...formData, maxStudents: parseInt(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Workshop Sessions</Label>
+                  {sessions.map((session, index) => (
+                    <Card key={index} className="mt-3 p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Session {index + 1}</span>
+                          {sessions.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeSession(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !session.date && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {session.date ? format(session.date, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={session.date}
+                              onSelect={(date) => updateSession(index, 'date', date)}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Start Time</Label>
+                            <Input
+                              type="time"
+                              value={session.startTime}
+                              onChange={(e) => updateSession(index, 'startTime', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label>End Time</Label>
+                            <Input
+                              type="time"
+                              value={session.endTime}
+                              onChange={(e) => updateSession(index, 'endTime', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                  <Button
+                    variant="outline"
+                    className="w-full mt-3"
+                    onClick={addSession}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Another Session
+                  </Button>
+                </div>
+              </div>
+              <Button onClick={handleUpdateWorkshop} className="w-full">
+                Update Workshop
+              </Button>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -271,13 +475,22 @@ export default function InstructorWorkshops() {
               <CardHeader>
                 <div className="flex justify-between items-start mb-2">
                   <Badge>{workshop.category}</Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(workshop.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(workshop)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(workshop.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <CardTitle className="line-clamp-2">{workshop.title}</CardTitle>
                 <CardDescription className="line-clamp-2">{workshop.description}</CardDescription>
@@ -318,6 +531,14 @@ export default function InstructorWorkshops() {
                       </div>
                     ))}
                   </div>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-3"
+                    onClick={() => handleIssueCertificates(workshop)}
+                  >
+                    <Award className="h-4 w-4 mr-2" />
+                    Issue Certificates
+                  </Button>
                 </div>
               </CardContent>
             </Card>

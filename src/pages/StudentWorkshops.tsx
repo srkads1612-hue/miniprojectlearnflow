@@ -6,29 +6,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Calendar as CalendarIcon, Clock, Users, Video, CheckCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Users, Video, BookOpen, Award } from 'lucide-react';
 import { format } from 'date-fns';
-import { getWorkshops, getEnrolledWorkshops, enrollInWorkshop, Workshop } from '@/lib/workshopManager';
+import { getWorkshops, enrollInWorkshop, getEnrolledWorkshops, Workshop } from '@/lib/workshopManager';
+import { getStudentCertificates, Certificate } from '@/lib/certificateManager';
+
 export default function StudentWorkshops() {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [allWorkshops, setAllWorkshops] = useState<Workshop[]>([]);
-  const [enrolledWorkshops, setEnrolledWorkshops] = useState<Workshop[]>([]);
+  const [workshops, setWorkshops] = useState<Workshop[]>([]);
+  const [filter, setFilter] = useState<'all' | 'enrolled' | 'certificates'>('all');
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+
   useEffect(() => {
+    loadWorkshops();
     if (user) {
-      loadWorkshops();
+      const certs = getStudentCertificates(user.id);
+      setCertificates(certs);
     }
   }, [user]);
+
   const loadWorkshops = () => {
-    if (user) {
-      setAllWorkshops(getWorkshops());
-      setEnrolledWorkshops(getEnrolledWorkshops(user.id));
-    }
+    const allWorkshops = getWorkshops();
+    setWorkshops(allWorkshops);
   };
+
+  const filteredWorkshops = workshops.filter(workshop => {
+    if (filter === 'enrolled' && user) {
+      return workshop.enrolledStudents.includes(user.id);
+    }
+    if (filter === 'certificates') {
+      return false; // Certificates shown separately
+    }
+    return true;
+  });
+
   const handleEnroll = (workshopId: string) => {
     if (!user) return;
+
     const success = enrollInWorkshop(workshopId, user.id);
     if (success) {
       loadWorkshops();
@@ -37,90 +52,169 @@ export default function StudentWorkshops() {
       toast.error('Could not enroll. Workshop may be full or you are already enrolled.');
     }
   };
+
   const isEnrolled = (workshopId: string) => {
-    return enrolledWorkshops.some(w => w.id === workshopId);
+    if (!user) return false;
+    return workshops.find(w => w.id === workshopId)?.enrolledStudents.includes(user.id) || false;
   };
+
   const handleJoinLive = (workshop: Workshop, sessionId: string) => {
     navigate(`/workshop/${workshop.id}?session=${sessionId}`);
   };
+
   const renderWorkshopCard = (workshop: Workshop) => {
     const enrolled = isEnrolled(workshop.id);
     const isFull = workshop.enrolledStudents.length >= workshop.maxStudents;
     const liveSession = workshop.sessions.find(s => s.isLive);
-    return <Card key={workshop.id} className="group hover:shadow-lg transition-shadow">
+    const nextSession = workshop.sessions[0];
+
+    return (
+      <Card key={workshop.id} className="group hover:shadow-lg transition-shadow">
         <CardHeader>
           <div className="flex justify-between items-start mb-2">
             <Badge>{workshop.category}</Badge>
-            {enrolled && <Badge variant="secondary"><CheckCircle className="h-3 w-3 mr-1" />Enrolled</Badge>}
+            {enrolled && <Badge variant="secondary">Enrolled</Badge>}
           </div>
           <CardTitle className="line-clamp-2">{workshop.title}</CardTitle>
           <CardDescription className="line-clamp-2">{workshop.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center justify-between text-sm">
-              
-              <span className="text-muted-foreground">by {workshop.instructorName}</span>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>by {workshop.instructorName}</span>
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                {workshop.enrolledStudents.length}/{workshop.maxStudents}
+              </div>
             </div>
 
-            {liveSession && enrolled && <Button className="w-full gap-2 animate-pulse" variant="glow" onClick={() => handleJoinLive(workshop, liveSession.id)}>
+            {liveSession && enrolled && (
+              <Button
+                className="w-full gap-2 animate-pulse"
+                variant="destructive"
+                onClick={() => handleJoinLive(workshop, liveSession.id)}
+              >
                 <Video className="h-4 w-4" />
                 JOIN LIVE NOW
-              </Button>}
+              </Button>
+            )}
 
             <div className="space-y-2">
-              <p className="text-sm font-medium">Upcoming Sessions:</p>
-              {workshop.sessions.slice(0, 3).map(session => <div key={session.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-sm">
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  <span>{format(new Date(session.date), 'MMM dd, yyyy')}</span>
-                  <Clock className="h-4 w-4 text-muted-foreground ml-2" />
-                  <span>{session.startTime} - {session.endTime}</span>
-                  {session.isLive && <Badge variant="destructive" className="ml-auto">LIVE</Badge>}
-                </div>)}
+              <p className="text-sm font-medium">
+                {workshop.sessions.length === 1 ? 'Session:' : `Sessions (${workshop.sessions.length} days):`}
+              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CalendarIcon className="h-4 w-4" />
+                {nextSession && format(new Date(nextSession.date), 'MMM dd, yyyy')}
+                {workshop.sessions.length > 1 && ' +'}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                {nextSession && `${nextSession.startTime} - ${nextSession.endTime}`}
+              </div>
             </div>
 
-            {!enrolled && <Button className="w-full" onClick={() => handleEnroll(workshop.id)} disabled={isFull}>
+            {!enrolled && (
+              <Button
+                className="w-full"
+                onClick={() => handleEnroll(workshop.id)}
+                disabled={isFull}
+              >
                 {isFull ? 'Workshop Full' : 'Enroll Now'}
-              </Button>}
+              </Button>
+            )}
+
+            {enrolled && !liveSession && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => navigate(`/workshop/${workshop.id}`)}
+              >
+                View Details
+              </Button>
+            )}
           </div>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   };
-  return <div className="min-h-screen bg-background">
+
+  return (
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Workshops</h1>
           <p className="text-muted-foreground">Join live workshop sessions with expert instructors</p>
         </div>
 
-        <Tabs defaultValue="all" className="space-y-6">
+        <Tabs defaultValue="all" className="w-full" onValueChange={(v) => setFilter(v as 'all' | 'enrolled' | 'certificates')}>
           <TabsList>
             <TabsTrigger value="all">All Workshops</TabsTrigger>
-            <TabsTrigger value="enrolled">My Workshops ({enrolledWorkshops.length})</TabsTrigger>
+            <TabsTrigger value="enrolled">My Workshops</TabsTrigger>
+            <TabsTrigger value="certificates">My Certificates</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all" className="space-y-6">
+          <TabsContent value="all" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {allWorkshops.map(renderWorkshopCard)}
+              {filteredWorkshops.map((workshop) => renderWorkshopCard(workshop))}
             </div>
-            {allWorkshops.length === 0 && <div className="text-center py-12">
+            {filteredWorkshops.length === 0 && (
+              <div className="text-center py-12">
                 <Video className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No workshops available</h3>
                 <p className="text-muted-foreground">Check back soon for new workshops!</p>
-              </div>}
+              </div>
+            )}
           </TabsContent>
 
-          <TabsContent value="enrolled" className="space-y-6">
+          <TabsContent value="enrolled" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {enrolledWorkshops.map(renderWorkshopCard)}
+              {filteredWorkshops.map((workshop) => renderWorkshopCard(workshop))}
             </div>
-            {enrolledWorkshops.length === 0 && <div className="text-center py-12">
-                <Video className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            {filteredWorkshops.length === 0 && (
+              <div className="text-center py-12">
+                <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No enrolled workshops</h3>
-                <p className="text-muted-foreground">Enroll in a workshop to get started!</p>
-              </div>}
+                <p className="text-muted-foreground">Browse all workshops to find one that interests you</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="certificates" className="mt-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {certificates.map((cert) => (
+                <Card key={cert.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <Award className="h-8 w-8 text-primary" />
+                      <Badge variant="outline">Certificate</Badge>
+                    </div>
+                    <CardTitle className="line-clamp-2">{cert.workshopTitle}</CardTitle>
+                    <CardDescription>
+                      Instructor: {cert.instructorName}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Issued on {format(new Date(cert.issuedAt), 'MMMM dd, yyyy')}
+                    </p>
+                    <Button variant="outline" className="w-full">
+                      View Certificate
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {certificates.length === 0 && (
+              <div className="text-center py-12">
+                <Award className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No certificates yet</h3>
+                <p className="text-muted-foreground">Complete workshops to earn certificates</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
-    </div>;
+    </div>
+  );
 }

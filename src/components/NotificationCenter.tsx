@@ -40,7 +40,11 @@ export function NotificationCenter() {
     markAsRead(notification.id);
     loadNotifications();
     setIsOpen(false);
-    navigate(`/course/${notification.courseId}`);
+    if (notification.itemType === 'workshop') {
+      navigate(`/workshop/${notification.itemId}`);
+    } else {
+      navigate(`/course/${notification.itemId}`);
+    }
   };
 
   const handleMarkAllRead = () => {
@@ -93,7 +97,7 @@ export function NotificationCenter() {
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1 space-y-1">
-                      <p className="font-medium text-sm">{notification.courseTitle}</p>
+                      <p className="font-medium text-sm">{notification.itemTitle}</p>
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                       <p className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}

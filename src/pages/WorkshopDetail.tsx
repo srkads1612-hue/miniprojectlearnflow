@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { getWorkshopById, Workshop } from '@/lib/workshopManager';
-import { Calendar as CalendarIcon, Clock, Users, Video } from 'lucide-react';
+import { getWorkshopComments, createComment, Comment } from '@/lib/commentManager';
+import { getWorkshopCertificate, Certificate } from '@/lib/certificateManager';
+import { Calendar as CalendarIcon, Clock, Users, Video, Send, Award, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function WorkshopDetail() {
   const { id } = useParams();
@@ -13,13 +19,47 @@ export default function WorkshopDetail() {
   const sessionId = searchParams.get('session');
   const { user } = useAuth();
   const [workshop, setWorkshop] = useState<Workshop | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [certificate, setCertificate] = useState<Certificate | null>(null);
 
   useEffect(() => {
     if (id) {
       const ws = getWorkshopById(id);
       setWorkshop(ws || null);
+      loadComments();
+      if (user) {
+        const cert = getWorkshopCertificate(id, user.id);
+        setCertificate(cert || null);
+      }
     }
-  }, [id]);
+  }, [id, user]);
+
+  const loadComments = () => {
+    if (id) {
+      const workshopComments = getWorkshopComments(id);
+      setComments(workshopComments);
+    }
+  };
+
+  const handlePostComment = () => {
+    if (!user || !workshop || !newComment.trim()) {
+      toast.error('Please enter a comment');
+      return;
+    }
+
+    createComment(workshop.id, user.id, user.name, newComment.trim());
+    setNewComment('');
+    loadComments();
+    toast.success('Comment posted!');
+  };
+
+  const handleDownloadCertificate = () => {
+    if (certificate) {
+      toast.success('Certificate download started!');
+      // In a real app, this would generate a PDF
+    }
+  };
 
   if (!workshop) {
     return (
@@ -125,6 +165,29 @@ export default function WorkshopDetail() {
             </CardContent>
           </Card>
 
+          {/* Certificate Section */}
+          {certificate && (
+            <Card className="border-primary">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Award className="h-12 w-12 text-primary" />
+                    <div>
+                      <h3 className="text-xl font-semibold">Certificate Earned!</h3>
+                      <p className="text-muted-foreground">
+                        Issued on {format(new Date(certificate.issuedAt), 'MMMM dd, yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                  <Button onClick={handleDownloadCertificate}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* About Workshop */}
           <Card>
             <CardContent className="p-6">
@@ -134,6 +197,50 @@ export default function WorkshopDetail() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Comments Section */}
+          {isEnrolled && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Discussion</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-3">
+                  <Textarea
+                    placeholder="Share your thoughts or ask questions..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    rows={3}
+                  />
+                  <Button onClick={handlePostComment} size="icon">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="space-y-4">
+                    {comments.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">
+                        No comments yet. Be the first to share your thoughts!
+                      </p>
+                    ) : (
+                      comments.map((comment) => (
+                        <div key={comment.id} className="p-4 rounded-lg bg-muted/50">
+                          <div className="flex items-start justify-between mb-2">
+                            <span className="font-semibold">{comment.userName}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(comment.createdAt), 'MMM dd, yyyy HH:mm')}
+                            </span>
+                          </div>
+                          <p className="text-sm">{comment.message}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
