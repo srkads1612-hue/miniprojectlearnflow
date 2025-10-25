@@ -19,6 +19,9 @@ import Profile from "./pages/Profile";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentProgress from "./pages/StudentProgress";
 import NotFound from "./pages/NotFound";
+import InstructorWorkshops from "./pages/InstructorWorkshops";
+import StudentWorkshops from "./pages/StudentWorkshops";
+import WorkshopDetail from "./pages/WorkshopDetail";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +70,30 @@ const App = () => (
                   element={
                     <ProtectedRoute allowedRoles={['instructor']}>
                       <InstructorHome />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/instructor/workshops" 
+                  element={
+                    <ProtectedRoute allowedRoles={['instructor']}>
+                      <InstructorWorkshops />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/student/workshops" 
+                  element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <StudentWorkshops />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/workshop/:id" 
+                  element={
+                    <ProtectedRoute>
+                      <WorkshopDetail />
                     </ProtectedRoute>
                   } 
                 />

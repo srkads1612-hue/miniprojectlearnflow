@@ -89,34 +89,64 @@ export function Navbar() {
               )}
             </Link>
             {user.role === 'student' && (
-              <Link 
-                to="/student/progress" 
-                className={`font-medium smooth-transition relative ${
-                  isActive('/student/progress') 
-                    ? 'text-primary' 
-                    : 'text-foreground hover:text-primary'
-                }`}
-              >
-                Progress
-                {isActive('/student/progress') && (
-                  <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
-                )}
-              </Link>
+              <>
+                <Link 
+                  to="/student/workshops" 
+                  className={`font-medium smooth-transition relative ${
+                    isActive('/student/workshops') 
+                      ? 'text-primary' 
+                      : 'text-foreground hover:text-primary'
+                  }`}
+                >
+                  Workshops
+                  {isActive('/student/workshops') && (
+                    <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
+                  )}
+                </Link>
+                <Link 
+                  to="/student/progress" 
+                  className={`font-medium smooth-transition relative ${
+                    isActive('/student/progress') 
+                      ? 'text-primary' 
+                      : 'text-foreground hover:text-primary'
+                  }`}
+                >
+                  Progress
+                  {isActive('/student/progress') && (
+                    <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
+                  )}
+                </Link>
+              </>
             )}
             {user.role === 'instructor' && (
-              <Link 
-                to="/instructor" 
-                className={`font-medium smooth-transition relative ${
-                  isActive('/instructor') 
-                    ? 'text-primary' 
-                    : 'text-foreground hover:text-primary'
-                }`}
-              >
-                Dashboard
-                {isActive('/instructor') && (
-                  <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
-                )}
-              </Link>
+              <>
+                <Link 
+                  to="/instructor" 
+                  className={`font-medium smooth-transition relative ${
+                    isActive('/instructor') 
+                      ? 'text-primary' 
+                      : 'text-foreground hover:text-primary'
+                  }`}
+                >
+                  Dashboard
+                  {isActive('/instructor') && (
+                    <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
+                  )}
+                </Link>
+                <Link 
+                  to="/instructor/workshops" 
+                  className={`font-medium smooth-transition relative ${
+                    isActive('/instructor/workshops') 
+                      ? 'text-primary' 
+                      : 'text-foreground hover:text-primary'
+                  }`}
+                >
+                  Workshops
+                  {isActive('/instructor/workshops') && (
+                    <span className="absolute -bottom-4 left-0 right-0 h-0.5 bg-primary"></span>
+                  )}
+                </Link>
+              </>
             )}
           </nav>
         )}
@@ -200,30 +230,56 @@ export function Navbar() {
               Courses
             </Link>
             {user.role === 'student' && (
-              <Link 
-                to="/student/progress" 
-                className={`px-4 py-2 rounded-md smooth-transition ${
-                  isActive('/student/progress') 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-accent'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Progress
-              </Link>
+              <>
+                <Link 
+                  to="/student/workshops" 
+                  className={`px-4 py-2 rounded-md smooth-transition ${
+                    isActive('/student/workshops') 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'hover:bg-accent'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Workshops
+                </Link>
+                <Link 
+                  to="/student/progress" 
+                  className={`px-4 py-2 rounded-md smooth-transition ${
+                    isActive('/student/progress') 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'hover:bg-accent'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Progress
+                </Link>
+              </>
             )}
             {user.role === 'instructor' && (
-              <Link 
-                to="/instructor" 
-                className={`px-4 py-2 rounded-md smooth-transition ${
-                  isActive('/instructor') 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'hover:bg-accent'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
+              <>
+                <Link 
+                  to="/instructor" 
+                  className={`px-4 py-2 rounded-md smooth-transition ${
+                    isActive('/instructor') 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'hover:bg-accent'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  to="/instructor/workshops" 
+                  className={`px-4 py-2 rounded-md smooth-transition ${
+                    isActive('/instructor/workshops') 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'hover:bg-accent'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Workshops
+                </Link>
+              </>
             )}
           </nav>
         </div>
