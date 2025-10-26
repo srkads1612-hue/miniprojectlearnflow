@@ -10,6 +10,7 @@ import { Calendar as CalendarIcon, Clock, Users, Video, BookOpen, Award } from '
 import { format } from 'date-fns';
 import { getWorkshops, enrollInWorkshop, getEnrolledWorkshops, Workshop } from '@/lib/workshopManager';
 import { getStudentCertificates, Certificate } from '@/lib/certificateManager';
+import { CertificateComponent } from '@/components/Certificate';
 
 export default function StudentWorkshops() {
   const { user } = useAuth();
@@ -180,37 +181,17 @@ export default function StudentWorkshops() {
             )}
           </TabsContent>
 
-          <TabsContent value="certificates" className="mt-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {certificates.map((cert) => (
-                <Card key={cert.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center gap-3 mb-2">
-                      <Award className="h-8 w-8 text-primary" />
-                      <Badge variant="outline">Certificate</Badge>
-                    </div>
-                    <CardTitle className="line-clamp-2">{cert.workshopTitle}</CardTitle>
-                    <CardDescription>
-                      Instructor: {cert.instructorName}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Issued on {format(new Date(cert.issuedAt), 'MMMM dd, yyyy')}
-                    </p>
-                    <Button variant="outline" className="w-full">
-                      View Certificate
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            {certificates.length === 0 && (
+          <TabsContent value="certificates" className="mt-6 space-y-12">
+            {certificates.length === 0 ? (
               <div className="text-center py-12">
                 <Award className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No certificates yet</h3>
                 <p className="text-muted-foreground">Complete workshops to earn certificates</p>
               </div>
+            ) : (
+              certificates.map((cert) => (
+                <CertificateComponent key={cert.id} certificate={cert} />
+              ))
             )}
           </TabsContent>
         </Tabs>

@@ -9,7 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { getWorkshopById, Workshop } from '@/lib/workshopManager';
 import { getWorkshopComments, createComment, Comment } from '@/lib/commentManager';
 import { getWorkshopCertificate, Certificate } from '@/lib/certificateManager';
-import { Calendar as CalendarIcon, Clock, Users, Video, Send, Award, Download } from 'lucide-react';
+import { CertificateComponent } from '@/components/Certificate';
+import { Calendar as CalendarIcon, Clock, Users, Video, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -54,12 +55,6 @@ export default function WorkshopDetail() {
     toast.success('Comment posted!');
   };
 
-  const handleDownloadCertificate = () => {
-    if (certificate) {
-      toast.success('Certificate download started!');
-      // In a real app, this would generate a PDF
-    }
-  };
 
   if (!workshop) {
     return (
@@ -167,25 +162,9 @@ export default function WorkshopDetail() {
 
           {/* Certificate Section */}
           {certificate && (
-            <Card className="border-primary">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Award className="h-12 w-12 text-primary" />
-                    <div>
-                      <h3 className="text-xl font-semibold">Certificate Earned!</h3>
-                      <p className="text-muted-foreground">
-                        Issued on {format(new Date(certificate.issuedAt), 'MMMM dd, yyyy')}
-                      </p>
-                    </div>
-                  </div>
-                  <Button onClick={handleDownloadCertificate}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="my-8">
+              <CertificateComponent certificate={certificate} />
+            </div>
           )}
 
           {/* About Workshop */}
