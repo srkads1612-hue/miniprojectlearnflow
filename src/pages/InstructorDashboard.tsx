@@ -62,7 +62,6 @@ export default function InstructorDashboard() {
     }
 
     if (user.role === 'instructor') {
-      setIsApproved(user.isApproved || false);
       const savedCourses = JSON.parse(localStorage.getItem('courses') || JSON.stringify(mockCourses));
       setCourses(savedCourses.filter((c: Course) => c.instructorId === user.id));
     }
@@ -101,7 +100,7 @@ export default function InstructorDashboard() {
     localStorage.setItem('applications', JSON.stringify(applications));
 
     // Update user to show they applied
-    updateUser({ role: 'instructor', isApproved: false });
+    updateUser({ role: 'instructor' });
 
     toast({ title: 'Application submitted!', description: 'Wait for admin approval.' });
   };

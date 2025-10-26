@@ -40,9 +40,9 @@ export default function InstructorWorkshops() {
     }
   }, [user]);
 
-  const loadWorkshops = () => {
+  const loadWorkshops = async () => {
     if (user) {
-      const instructorWorkshops = getInstructorWorkshops(user.id);
+      const instructorWorkshops = await getInstructorWorkshops(user.id);
       setWorkshops(instructorWorkshops);
     }
   };
@@ -192,14 +192,14 @@ export default function InstructorWorkshops() {
     toast.success('Workshop updated successfully!');
   };
 
-  const handleIssueCertificates = (workshop: Workshop) => {
+  const handleIssueCertificates = async (workshop: Workshop) => {
     if (!user) return;
     if (workshop.enrolledStudents.length === 0) {
       toast.error('No students enrolled in this workshop');
       return;
     }
 
-    const issued = issueCertificates(
+    const issued = await issueCertificates(
       workshop.id,
       workshop.title,
       user.id,
@@ -208,7 +208,7 @@ export default function InstructorWorkshops() {
     );
 
     if (issued.length > 0) {
-      notifyEnrolledWorkshopStudents(
+      await notifyEnrolledWorkshopStudents(
         workshop.id,
         workshop.title,
         'certificate_issued',

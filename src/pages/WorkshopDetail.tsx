@@ -26,32 +26,44 @@ export default function WorkshopDetail() {
 
   useEffect(() => {
     if (id) {
-      const ws = getWorkshopById(id);
-      setWorkshop(ws || null);
+      loadWorkshop();
       loadComments();
       if (user) {
-        const cert = getWorkshopCertificate(id, user.id);
-        setCertificate(cert || null);
+        loadCertificate();
       }
     }
   }, [id, user]);
 
-  const loadComments = () => {
+  const loadWorkshop = async () => {
     if (id) {
-      const workshopComments = getWorkshopComments(id);
+      const ws = await getWorkshopById(id);
+      setWorkshop(ws || null);
+    }
+  };
+
+  const loadComments = async () => {
+    if (id) {
+      const workshopComments = await getWorkshopComments(id);
       setComments(workshopComments);
     }
   };
 
-  const handlePostComment = () => {
+  const loadCertificate = async () => {
+    if (id && user) {
+      const cert = await getWorkshopCertificate(id, user.id);
+      setCertificate(cert || null);
+    }
+  };
+
+  const handlePostComment = async () => {
     if (!user || !workshop || !newComment.trim()) {
       toast.error('Please enter a comment');
       return;
     }
 
-    createComment(workshop.id, user.id, user.name, newComment.trim());
+    await createComment(workshop.id, user.id, user.name, newComment.trim());
     setNewComment('');
-    loadComments();
+    await loadComments();
     toast.success('Comment posted!');
   };
 

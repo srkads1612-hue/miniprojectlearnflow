@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export interface Certificate {
   id: string;
   workshopId: string;
@@ -9,56 +11,122 @@ export interface Certificate {
   issuedAt: string;
 }
 
-export const issueCertificates = (workshopId: string, workshopTitle: string, instructorId: string, instructorName: string, studentIds: string[]): Certificate[] => {
-  const certificates = getCertificates();
+export const issueCertificates = async (workshopId: string, workshopTitle: string, instructorId: string, instructorName: string, studentIds: string[]): Promise<Certificate[]> => {
   const newCertificates: Certificate[] = [];
   
-  // Get student names from users
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  
-  studentIds.forEach(studentId => {
+  // Get student names from profiles
+  const { data: students } = await supabase
+    .from('profiles')
+    .select('id, name')
+    .in('id', studentIds);
+
+  for (const studentId of studentIds) {
     // Check if certificate already exists
-    const existingCert = certificates.find(
-      c => c.workshopId === workshopId && c.studentId === studentId
-    );
+    const { data: existing } = await supabase
+      .from('certificates')
+      .select('id')
+      .eq('workshop_id', workshopId)
+      .eq('student_id', studentId)
+      .single();
     
-    if (!existingCert) {
-      const student = users.find((u: any) => u.id === studentId);
-      const certificate: Certificate = {
-        id: `cert-${Date.now()}-${Math.random()}`,
-        workshopId,
-        workshopTitle,
-        studentId,
-        studentName: student?.name || 'Student',
-        instructorId,
-        instructorName,
-        issuedAt: new Date().toISOString(),
-      };
+    if (!existing) {
+      const student = students?.find(s => s.id === studentId);
       
-      certificates.push(certificate);
-      newCertificates.push(certificate);
+      const { data, error } = await supabase
+        .from('certificates')
+        .insert({
+          workshop_id: workshopId,
+          workshop_title: workshopTitle,
+          student_id: studentId,
+          student_name: student?.name || 'Student',
+          instructor_id: instructorId,
+          instructor_name: instructorName,
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        newCertificates.push({
+          id: data.id,
+          workshopId: data.workshop_id,
+          workshopTitle: data.workshop_title,
+          studentId: data.student_id,
+          studentName: data.student_name,
+          instructorId: data.instructor_id,
+          instructorName: data.instructor_name,
+          issuedAt: data.issued_at,
+        });
+      }
     }
-  });
+  }
   
-  localStorage.setItem('certificates', JSON.stringify(certificates));
   return newCertificates;
 };
 
-export const getCertificates = (): Certificate[] => {
-  const stored = localStorage.getItem('certificates');
-  return stored ? JSON.parse(stored) : [];
+export const getCertificates = async (): Promise<Certificate[]> => {
+  const { data } = await supabase
+    .from('certificates')
+    .select('*')
+    .order('issued_at', { ascending: false });
+
+  if (!data) return [];
+
+  return data.map(c => ({
+    id: c.id,
+    workshopId: c.workshop_id,
+    workshopTitle: c.workshop_title,
+    studentId: c.student_id,
+    studentName: c.student_name,
+    instructorId: c.instructor_id,
+    instructorName: c.instructor_name,
+    issuedAt: c.issued_at,
+  }));
 };
 
-export const getStudentCertificates = (studentId: string): Certificate[] => {
-  return getCertificates()
-    .filter(c => c.studentId === studentId)
-    .sort((a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime());
+export const getStudentCertificates = async (studentId: string): Promise<Certificate[]> => {
+  const { data } = await supabase
+    .from('certificates')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('issued_at', { ascending: false });
+
+  if (!data) return [];
+
+  return data.map(c => ({
+    id: c.id,
+    workshopId: c.workshop_id,
+    workshopTitle: c.workshop_title,
+    studentId: c.student_id,
+    studentName: c.student_name,
+    instructorId: c.instructor_id,
+    instructorName: c.instructor_name,
+    issuedAt: c.issued_at,
+  }));
 };
 
-export const getWorkshopCertificate = (workshopId: string, studentId: string): Certificate | undefined => {
-  return getCertificates().find(c => c.workshopId === workshopId && c.studentId === studentId);
+export const getWorkshopCertificate = async (workshopId: string, studentId: string): Promise<Certificate | undefined> => {
+  const { data } = await supabase
+    .from('certificates')
+    .select('*')
+    .eq('workshop_id', workshopId)
+    .eq('student_id', studentId)
+    .maybeSingle();
+
+  if (!data) return undefined;
+
+  return {
+    id: data.id,
+    workshopId: data.workshop_id,
+    workshopTitle: data.workshop_title,
+    studentId: data.student_id,
+    studentName: data.student_name,
+    instructorId: data.instructor_id,
+    instructorName: data.instructor_name,
+    issuedAt: data.issued_at,
+  };
 };
 
-export const hasCertificate = (workshopId: string, studentId: string): boolean => {
-  return !!getWorkshopCertificate(workshopId, studentId);
+export const hasCertificate = async (workshopId: string, studentId: string): Promise<boolean> => {
+  const cert = await getWorkshopCertificate(workshopId, studentId);
+  return !!cert;
 };

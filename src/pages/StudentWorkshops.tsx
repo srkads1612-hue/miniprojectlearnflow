@@ -22,14 +22,20 @@ export default function StudentWorkshops() {
   useEffect(() => {
     loadWorkshops();
     if (user) {
-      const certs = getStudentCertificates(user.id);
-      setCertificates(certs);
+      loadCertificates();
     }
   }, [user]);
 
-  const loadWorkshops = () => {
-    const allWorkshops = getWorkshops();
+  const loadWorkshops = async () => {
+    const allWorkshops = await getWorkshops();
     setWorkshops(allWorkshops);
+  };
+
+  const loadCertificates = async () => {
+    if (user) {
+      const certs = await getStudentCertificates(user.id);
+      setCertificates(certs);
+    }
   };
 
   const filteredWorkshops = workshops.filter(workshop => {
@@ -42,12 +48,12 @@ export default function StudentWorkshops() {
     return true;
   });
 
-  const handleEnroll = (workshopId: string) => {
+  const handleEnroll = async (workshopId: string) => {
     if (!user) return;
 
-    const success = enrollInWorkshop(workshopId, user.id);
+    const success = await enrollInWorkshop(workshopId, user.id);
     if (success) {
-      loadWorkshops();
+      await loadWorkshops();
       toast.success('Successfully enrolled in workshop!');
     } else {
       toast.error('Could not enroll. Workshop may be full or you are already enrolled.');
